@@ -1,0 +1,173 @@
+---
+# ============================================================
+# 1. START INFINISPAN
+# ============================================================
+
+- name: Start Infinispan Node 1
+  hosts: infinispan-node1
+  gather_facts: no
+  become: yes
+
+  tasks:
+    - name: Start Infinispan Node 1
+      shell: /rlms/shell/infinispan_9.4.16/start_infinispan_node1.sh
+      register: infinispan_node1_result
+
+    - name: Display Infinispan Node 1 result
+      debug:
+        var: infinispan_node1_result.stdout
+
+
+- name: Start Infinispan Node 2
+  hosts: infinispan-node2
+  gather_facts: no
+  become: yes
+
+  tasks:
+    - name: Start Infinispan Node 2
+      shell: /rlms/shell/infinispan_9.4.16/start_infinispan_node2.sh
+      register: infinispan_node2_result
+
+    - name: Display Infinispan Node 2 result
+      debug:
+        var: infinispan_node2_result.stdout
+
+
+# ============================================================
+# 2. START KAFKA 1
+# ============================================================
+
+- name: Start Kafka 1 - Zookeeper
+  hosts: kafka1
+  gather_facts: no
+  become: yes
+
+  tasks:
+    - name: Start Zookeeper on Kafka 1
+      shell: /rlms/shell/1.start_zookeeper.sh
+      register: zk1_result
+
+    - name: Display Zookeeper result
+      debug:
+        var: zk1_result.stdout
+
+
+- name: Start Kafka 1 - Kafka
+  hosts: kafka1
+  gather_facts: no
+  become: yes
+
+  tasks:
+    - name: Start Kafka on Kafka 1
+      shell: /rlms/shell/2.start_kafka.sh
+      register: kafka1_result
+
+    - name: Display Kafka 1 result
+      debug:
+        var: kafka1_result.stdout
+
+
+# ============================================================
+# 3. START KAFKA 2
+# ============================================================
+
+- name: Start Kafka 2 - Zookeeper
+  hosts: kafka2
+  gather_facts: no
+  become: yes
+
+  tasks:
+    - name: Start Zookeeper on Kafka 2
+      shell: /rlms/shell/1.start_zookeeper.sh
+      register: zk2_result
+
+    - name: Display Zookeeper result
+      debug:
+        var: zk2_result.stdout
+
+
+- name: Start Kafka 2 - Kafka
+  hosts: kafka2
+  gather_facts: no
+  become: yes
+
+  tasks:
+    - name: Start Kafka on Kafka 2
+      shell: /rlms/shell/2.start_kafka.sh
+      register: kafka2_result
+
+    - name: Display Kafka 2 result
+      debug:
+        var: kafka2_result.stdout
+
+
+# ============================================================
+# 4. START KEYCLOAK
+# ============================================================
+
+- name: Start Keycloak Node 1
+  hosts: keycloak-node1
+  gather_facts: no
+  become: yes
+
+  tasks:
+    - name: Start Keycloak Node 1
+      shell: /rlms/shell/start_keycloak_cluster_node1.sh
+      register: keycloak_node1_result
+
+    - name: Display Keycloak Node 1 result
+      debug:
+        var: keycloak_node1_result.stdout
+
+
+- name: Start Keycloak Node 2
+  hosts: keycloak-node2
+  gather_facts: no
+  become: yes
+
+  tasks:
+    - name: Start Keycloak Node 2
+      shell: /rlms/shell/start_keycloak_cluster_node2.sh
+      register: keycloak_node2_result
+
+    - name: Display Keycloak Node 2 result
+      debug:
+        var: keycloak_node2_result.stdout
+
+
+# ============================================================
+# 5. START BRMS 1
+# ============================================================
+
+- name: Start BRMS 1
+  hosts: brms1
+  gather_facts: no
+  become: yes
+
+  tasks:
+    - name: Start BRMS 1
+      shell: /rlms/shell/BRMS.sh
+      register: brms1_result
+
+    - name: Display BRMS 1 result
+      debug:
+        var: brms1_result.stdout
+
+
+# ============================================================
+# 6. START BRMS 2
+# ============================================================
+
+- name: Start BRMS 2
+  hosts: brms2
+  gather_facts: no
+  become: yes
+
+  tasks:
+    - name: Start BRMS 2
+      shell: /rlms/shell/BRMS.sh
+      register: brms2_result
+
+    - name: Display BRMS 2 result
+      debug:
+        var: brms2_result.stdout
