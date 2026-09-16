@@ -1,0 +1,4 @@
+openssl req -new -newkey rsa:2048 -nodes -keyout jenkins.prod.rlms.sbi.key -out jenkins.prod.rlms.sbi.csr -subj "/C=IN/ST=Maharashtra/L=Navi Mumbai/O=State Bank of India/OU=GITC/CN=jenkins.prod.rlms.sbi" -addext "subjectAltName=DNS:jenkins.prod.rlms.sbi,DNS:artifactory.prod.rlms.sbi,DNS:jenkins.dr.rlms.sbi,DNS:artifactory.dr.rlms.sbi,DNS:*.rlms.sbi"
+
+
+openssl req -in jenkins.prod.rlms.sbi.csr -noout -text | grep -A1 "Subject Alternative Name"
