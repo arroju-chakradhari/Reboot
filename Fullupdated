@@ -1,0 +1,110 @@
+spec:
+  inputs:
+    target_branch:
+      type: string
+      default: ""
+      description: "Enter the code branch to deploy, e.g. sit-oct26 or feature/my-change"
+    deploy_env:
+      type: string
+      default: "sit"
+      options:
+        - "dev"
+        - "devnext"
+        - "sit"
+        - "sit1"
+        - "uat"
+        - "preprod"
+        - "prod"
+      description: "Environment to deploy"
+    deploy_sl:
+      type: boolean
+      default: true
+      description: "Deploy Staff Loan (SL)"
+    deploy_xp:
+      type: boolean
+      default: false
+      description: "Deploy Xpress (XP)"
+    auto_deploy:
+      type: boolean
+      default: false
+      description: "Request automatic deployment to SIT, if supported downstream"
+---
+stages:
+  - validate
+  - trigger
+# Values selected in the New pipeline form.
+variables:
+  TARGET_BRANCH: "$[[ inputs.target_branch ]]"
+  DEPLOY_ENV: "$[[ inputs.deploy_env ]]"
+  DEPLOY_SL: "$[[ inputs.deploy_sl ]]"
+  DEPLOY_XP: "$[[ inputs.deploy_xp ]]"
+  AUTO_DEPLOY: "$[[ inputs.auto_deploy ]]"
+# Run this controller only from GitLab's New pipeline UI.
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - when: never
+# Validate all selections before triggering any module.
+validate_parameters:
+  stage: validate
+  script:
+    - |
+      set -eu
+      echo "======================================"
+      echo "RLMS UNIVERSAL DEPLOYMENT CONTROLLER"
+      echo "======================================"
+      echo "Controller branch: ${CI_COMMIT_REF_NAME}"
+      echo "Code branch      : ${TARGET_BRANCH}"
+      echo "Environment      : ${DEPLOY_ENV}"
+      echo "Deploy SL        : ${DEPLOY_SL}"
+      echo "Deploy XP        : ${DEPLOY_XP}"
+      echo "Auto deploy      : ${AUTO_DEPLOY}"
+      if [ -z "$(printf '%s' "${TARGET_BRANCH}" | tr -d '[:space:]')" ]; then
+        echo "ERROR: Enter a code branch."
+        exit 1
+      fi
+      if [ "${DEPLOY_SL}" != "true" ] &&
+         [ "${DEPLOY_XP}" != "true" ]; then
+        echo "ERROR: Select SL, XP, or both modules."
+        exit 1
+      fi
+      if [ "${AUTO_DEPLOY}" = "true" ] &&
+         [ "${DEPLOY_ENV}" != "sit" ]; then
+        echo "ERROR: Auto deployment is permitted only for SIT."
+        exit 1
+      fi
+      echo "Validation successful."
+# Trigger Staff Loan only when selected.
+deploy_sl:
+  stage: trigger
+  needs:
+    - validate_parameters
+  rules:
+    - if: '$DEPLOY_SL == "true"'
+      when: on_success
+    - when: never
+  trigger:
+    project: "rlms/source/nxt/staff-loan/rlms-sl-parent"
+    branch: "$TARGET_BRANCH"
+    strategy: mirror
+  # Pass the selected deployment settings to SL.
+  variables:
+    DEPLOY_ENV: "$[[ inputs.deploy_env ]]"
+    AUTO_DEPLOY: "$[[ inputs.auto_deploy ]]"
+# Trigger Xpress only when selected.
+deploy_xp:
+  stage: trigger
+  needs:
+    - validate_parameters
+  rules:
+    - if: '$DEPLOY_XP == "true"'
+      when: on_success
+    - when: never
+  trigger:
+    project: "rlms/source/nxt/xpress/rlms-xp-parent"
+    branch: "$TARGET_BRANCH"
+    strategy: mirror
+  # Pass the selected deployment settings to XP.
+  variables:
+    DEPLOY_ENV: "$[[ inputs.deploy_env ]]"
+    AUTO_DEPLOY: "$[[ inputs.auto_deploy ]]"
