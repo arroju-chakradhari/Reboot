@@ -1,0 +1,158 @@
+
+# ==========================================================
+# RLMS UNIVERSAL BUILD AND DEPLOYMENT CONTROLLER
+# Project: rlms-deployments
+# ==========================================================
+
+stages:
+  - validate
+  - trigger
+
+# ==========================================================
+# PIPELINE PARAMETERS
+# ==========================================================
+
+variables:
+  Target_Branch:
+    value: "devopsTest"
+    description: "Branch to build/deploy in module projects"
+
+  DEPLOY_ENV:
+    value: "sit"
+    description: "Environment to deploy"
+    options:
+      - "dev"
+      - "devnext"
+      - "sit"
+      - "sit1"
+      - "uat"
+      - "preprod"
+      - "prod"
+
+  MODULES:
+    value: "sl"
+    description: "Select all modules or one module"
+    options:
+      - "all"
+      - "sl"
+      - "xp"
+
+  AUTO_DEPLOY:
+    value: "no"
+    description: "Automatically deploy to SIT after build/upload"
+    options:
+      - "no"
+      - "yes"
+
+# ==========================================================
+# VALIDATE INPUT PARAMETERS
+# ==========================================================
+
+validate_parameters:
+  stage: validate
+
+  script:
+    - |
+      set -eu
+
+      echo "========================================"
+      echo "RLMS UNIVERSAL DEPLOYMENT"
+      echo "========================================"
+      echo "Target branch    : ${Target_Branch}"
+      echo "Environment      : ${DEPLOY_ENV}"
+      echo "Modules          : ${MODULES}"
+      echo "Automatic deploy : ${AUTO_DEPLOY}"
+      echo "========================================"
+
+      if [ -z "${Target_Branch}" ]; then
+        echo "ERROR: Target_Branch cannot be empty."
+        exit 1
+      fi
+
+      case "${DEPLOY_ENV}" in
+        dev|devnext|sit|sit1|uat|preprod|prod)
+          echo "Environment is valid."
+          ;;
+        *)
+          echo "ERROR: Invalid deployment environment."
+          exit 1
+          ;;
+      esac
+
+      case "${MODULES}" in
+        all|sl|xp)
+          echo "Module selection is valid."
+          ;;
+        *)
+          echo "ERROR: MODULES must be all, sl, or xp."
+          exit 1
+          ;;
+      esac
+
+      case "${AUTO_DEPLOY}" in
+        yes|no)
+          echo "AUTO_DEPLOY value is valid."
+          ;;
+        *)
+          echo "ERROR: AUTO_DEPLOY must be yes or no."
+          exit 1
+          ;;
+      esac
+
+      if [ "${AUTO_DEPLOY}" = "yes" ] &&
+         [ "${DEPLOY_ENV}" != "sit" ]; then
+        echo "ERROR: Automatic deployment is allowed only for SIT."
+        exit 1
+      fi
+
+      echo "Parameter validation successful."
+
+# ==========================================================
+# STAFF LOAN MODULE (SL)
+# ==========================================================
+
+deploy_sl:
+  stage: trigger
+
+  needs:
+    - validate_parameters
+
+  rules:
+    - if: '$MODULES == "all" || $MODULES == "sl"'
+      when: on_success
+    - when: never
+
+  trigger:
+    project: "rlms/source/nxt/staff-loan/rlms-sl-parent"
+    branch: "$Target_Branch"
+    strategy: mirror
+
+  variables:
+    Target_Branch: "$Target_Branch"
+    DEPLOY_ENV: "$DEPLOY_ENV"
+    AUTO_DEPLOY: "$AUTO_DEPLOY"
+
+# ==========================================================
+# XPRESS MODULE (XP)
+# ==========================================================
+
+deploy_xp:
+  stage: trigger
+
+  needs:
+    - validate_parameters
+
+  rules:
+    - if: '$MODULES == "all" || $MODULES == "xp"'
+      when: on_success
+    - when: never
+
+  trigger:
+    project: "rlms/source/nxt/xpress/rlms-xp-parent"
+    branch: "$Target_Branch"
+    strategy: mirror
+
+  variables:
+    Target_Branch: "$Target_Branch"
+    DEPLOY_ENV: "$DEPLOY_ENV"
+    AUTO_DEPLOY: "$AUTO_DEPLOY"
