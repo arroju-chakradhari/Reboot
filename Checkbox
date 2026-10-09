@@ -1,0 +1,126 @@
+
+spec:
+  inputs:
+    target_branch:
+      type: string
+      default: "devopsTest"
+      description: "Branch to build and deploy"
+
+    deploy_env:
+      type: string
+      default: "sit"
+      options:
+        - "dev"
+        - "devnext"
+        - "sit"
+        - "sit1"
+        - "uat"
+        - "preprod"
+        - "prod"
+      description: "Environment to deploy"
+
+    deploy_sl:
+      type: boolean
+      default: true
+      description: "Deploy Staff Loan (SL)"
+
+    deploy_xp:
+      type: boolean
+      default: false
+      description: "Deploy Xpress (XP)"
+
+    auto_deploy:
+      type: boolean
+      default: false
+      description: "Automatically deploy to SIT"
+
+---
+
+stages:
+  - validate
+  - trigger
+
+variables:
+  TARGET_BRANCH: "$[[ inputs.target_branch ]]"
+  DEPLOY_ENV: "$[[ inputs.deploy_env ]]"
+  DEPLOY_SL: "$[[ inputs.deploy_sl ]]"
+  DEPLOY_XP: "$[[ inputs.deploy_xp ]]"
+  AUTO_DEPLOY: "$[[ inputs.auto_deploy ]]"
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - when: never
+
+validate_parameters:
+  stage: validate
+  script:
+    - |
+      set -eu
+
+      echo "================================="
+      echo "RLMS UNIVERSAL CI/CD CONTROLLER"
+      echo "================================="
+      echo "Branch       : ${TARGET_BRANCH}"
+      echo "Environment  : ${DEPLOY_ENV}"
+      echo "Deploy SL    : ${DEPLOY_SL}"
+      echo "Deploy XP    : ${DEPLOY_XP}"
+      echo "Auto Deploy  : ${AUTO_DEPLOY}"
+
+      if [ "${DEPLOY_SL}" != "true" ] &&
+         [ "${DEPLOY_XP}" != "true" ]; then
+        echo "ERROR: Select SL, XP, or both."
+        exit 1
+      fi
+
+      if [ "${AUTO_DEPLOY}" = "true" ] &&
+         [ "${DEPLOY_ENV}" != "sit" ]; then
+        echo "ERROR: Auto deployment is allowed only for SIT."
+        exit 1
+      fi
+
+      if [ "${DEPLOY_ENV}" = "prod" ] &&
+         [ "${AUTO_DEPLOY}" = "true" ]; then
+        echo "ERROR: Production auto deployment is prohibited."
+        exit 1
+      fi
+
+      echo "Validation successful."
+
+deploy_sl:
+  stage: trigger
+  needs:
+    - validate_parameters
+
+  rules:
+    - if: '$DEPLOY_SL == "true"'
+      when: on_success
+    - when: never
+
+  trigger:
+    project: "rlms/source/nxt/staff-loan/rlms-sl-parent"
+    branch: "$TARGET_BRANCH"
+    strategy: mirror
+
+  variables:
+    DEPLOY_ENV: "$DEPLOY_ENV"
+    AUTO_DEPLOY: "$AUTO_DEPLOY"
+
+deploy_xp:
+  stage: trigger
+  needs:
+    - validate_parameters
+
+  rules:
+    - if: '$DEPLOY_XP == "true"'
+      when: on_success
+    - when: never
+
+  trigger:
+    project: "rlms/source/nxt/xpress/rlms-xp-parent"
+    branch: "$TARGET_BRANCH"
+    strategy: mirror
+
+  variables:
+    DEPLOY_ENV: "$DEPLOY_ENV"
+    AUTO_DEPLOY: "$AUTO_DEPLOY"
