@@ -1,0 +1,261 @@
+stages:
+  - validate
+  - trigger
+
+
+# ============================================================
+# PIPELINE PARAMETERS
+# ============================================================
+
+variables:
+
+  Target_Branch:
+    value: "devopsTest"
+    description: "Branch to build/deploy"
+
+  DEPLOY_ENV:
+    value: "sit"
+    description: "Environment to deploy"
+    options:
+      - "dev"
+      - "devnext"
+      - "sit"
+      - "sit1"
+      - "uat"
+      - "preprod"
+      - "prod"
+
+  MODULES:
+    value: "all"
+    description: "Module to deploy. Use all or one module"
+    options:
+      - "all"
+      - "home-loan"
+      - "auto-loan"
+      - "commons"
+      - "external"
+      - "gp"
+      - "rt"
+      - "sl"
+      - "xp"
+
+  AUTO_DEPLOY:
+    value: "no"
+    description: "Automatically deploy selected environment"
+    options:
+      - "no"
+      - "yes"
+
+
+# ============================================================
+# VALIDATION
+# ============================================================
+
+validate_parameters:
+  stage: validate
+
+  script:
+    - echo "======================================"
+    - echo "RLMS UNIVERSAL DEPLOYMENT"
+    - echo "======================================"
+    - echo "Branch       : $Target_Branch"
+    - echo "Environment  : $DEPLOY_ENV"
+    - echo "Modules      : $MODULES"
+    - echo "Auto Deploy  : $AUTO_DEPLOY"
+    - echo "======================================"
+
+    - |
+      if [ "$DEPLOY_ENV" = "prod" ] && [ "$AUTO_DEPLOY" = "yes" ]; then
+        echo "ERROR: Automatic PROD deployment is not allowed."
+        exit 1
+      fi
+
+    - |
+      if [ "$DEPLOY_ENV" = "select" ]; then
+        echo "ERROR: Please select a deployment environment."
+        exit 1
+      fi
+
+    - |
+      if [ -z "$Target_Branch" ]; then
+        echo "ERROR: Target_Branch cannot be empty."
+        exit 1
+      fi
+
+    - echo "Parameter validation successful."
+
+
+# ============================================================
+# HOME LOAN
+# ============================================================
+
+deploy_home_loan:
+  stage: trigger
+
+  rules:
+    - if: '$MODULES == "all" || $MODULES == "home-loan"'
+      when: on_success
+    - when: never
+
+  trigger:
+    project: "rlms/source/nxt/home-loans/home-loan-parent"
+    branch: "$Target_Branch"
+    strategy: mirror
+
+  variables:
+    DEPLOY_ENV: "$DEPLOY_ENV"
+    AUTO_DEPLOY: "$AUTO_DEPLOY"
+
+
+# ============================================================
+# AUTO LOAN
+# ============================================================
+
+deploy_auto_loan:
+  stage: trigger
+
+  rules:
+    - if: '$MODULES == "all" || $MODULES == "auto-loan"'
+      when: on_success
+    - when: never
+
+  trigger:
+    project: "rlms/source/nxt/auto-loans/rlms-al-parent"
+    branch: "$Target_Branch"
+    strategy: mirror
+
+  variables:
+    DEPLOY_ENV: "$DEPLOY_ENV"
+    AUTO_DEPLOY: "$AUTO_DEPLOY"
+
+
+# ============================================================
+# COMMONS
+# ============================================================
+
+deploy_commons:
+  stage: trigger
+
+  rules:
+    - if: '$MODULES == "all" || $MODULES == "commons"'
+      when: on_success
+    - when: never
+
+  trigger:
+    project: "rlms/source/nxt/commons/rlms-commons-parent"
+    branch: "$Target_Branch"
+    strategy: mirror
+
+  variables:
+    DEPLOY_ENV: "$DEPLOY_ENV"
+    AUTO_DEPLOY: "$AUTO_DEPLOY"
+
+
+# ============================================================
+# EXTERNAL
+# ============================================================
+
+deploy_external:
+  stage: trigger
+
+  rules:
+    - if: '$MODULES == "all" || $MODULES == "external"'
+      when: on_success
+    - when: never
+
+  trigger:
+    project: "rlms/source/nxt/external/rlms-external-parent"
+    branch: "$Target_Branch"
+    strategy: mirror
+
+  variables:
+    DEPLOY_ENV: "$DEPLOY_ENV"
+    AUTO_DEPLOY: "$AUTO_DEPLOY"
+
+
+# ============================================================
+# GP
+# ============================================================
+
+deploy_gp:
+  stage: trigger
+
+  rules:
+    - if: '$MODULES == "all" || $MODULES == "gp"'
+      when: on_success
+    - when: never
+
+  trigger:
+    project: "rlms/source/nxt/gp/rlms-gp-parent"
+    branch: "$Target_Branch"
+    strategy: mirror
+
+  variables:
+    DEPLOY_ENV: "$DEPLOY_ENV"
+    AUTO_DEPLOY: "$AUTO_DEPLOY"
+
+
+# ============================================================
+# RT
+# ============================================================
+
+deploy_rt:
+  stage: trigger
+
+  rules:
+    - if: '$MODULES == "all" || $MODULES == "rt"'
+      when: on_success
+    - when: never
+
+  trigger:
+    project: "rlms/source/nxt/roof_top_solar_panel/rlms-rt-parent"
+    branch: "$Target_Branch"
+    strategy: mirror
+
+  variables:
+    DEPLOY_ENV: "$DEPLOY_ENV"
+    AUTO_DEPLOY: "$AUTO_DEPLOY"
+
+
+# ============================================================
+# STAFF LOAN
+# ============================================================
+
+deploy_sl:
+  stage: trigger
+
+  rules:
+    - if: '$MODULES == "all" || $MODULES == "sl"'
+      when: on_success
+    - when: never
+
+  trigger:
+    project: "rlms/source/nxt/staff-loan/rlms-sl-parent"
+    branch: "$Target_Branch"
+    strategy: mirror
+
+  variables:
+    DEPLOY_ENV: "$DEPLOY_ENV"
+    AUTO_DEPLOY: "$AUTO_DEPLOY"
+
+
+# ============================================================
+# XPRESS
+# ============================================================
+
+deploy_xp:
+  stage: trigger
+
+  rules:
+    - if: '$MODULES == "all" || $MODULES == "xp"'
+      when: on_success
+    - when: never
+
+  trigger:
+    project: "rlms/source/nxt/xpress/rlms-xp-parent"
+    branch: "$Target_Branch"
+    strategy: mirror
+
+  variables:
+    DEPLOY_ENV: "$DEPLOY_ENV"
+    AUTO_DEPLOY: "$AUTO_DEPLOY"
