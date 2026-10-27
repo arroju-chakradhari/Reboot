@@ -1,0 +1,116 @@
+
+spec:
+  inputs:
+    target_branch:
+      type: string
+      default: "devopsTest"
+      description: "Application code branch to build and deploy"
+
+    deploy_env:
+      type: string
+      default: "sit"
+      options:
+        - "dev"
+        - "dev1"
+        - "devnext"
+        - "sit"
+        - "sit1"
+        - "uat"
+        - "preprod"
+        - "prod"
+      description: "Target deployment environment"
+
+    deploy_sl:
+      type: boolean
+      default: true
+      description: "Run Staff Loan (SL)"
+
+    deploy_xp:
+      type: boolean
+      default: false
+      description: "Run Xpress (XP)"
+
+---
+
+stages:
+  - validate
+  - trigger
+
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - when: never
+
+variables:
+  CTRL_TARGET_BRANCH: "$[[ inputs.target_branch ]]"
+  CTRL_DEPLOY_ENV: "$[[ inputs.deploy_env ]]"
+  CTRL_DEPLOY_SL: "$[[ inputs.deploy_sl ]]"
+  CTRL_DEPLOY_XP: "$[[ inputs.deploy_xp ]]"
+
+validate_parameters:
+  stage: validate
+  script:
+    - |
+      set -eu
+
+      echo "========================================"
+      echo "RLMS UNIVERSAL DEPLOYMENT CONTROLLER"
+      echo "========================================"
+      echo "Controller branch : ${CI_COMMIT_REF_NAME}"
+      echo "Pipeline source   : ${CI_PIPELINE_SOURCE}"
+      echo "Target code branch: ${CTRL_TARGET_BRANCH}"
+      echo "Environment       : ${CTRL_DEPLOY_ENV}"
+      echo "Deploy SL          : ${CTRL_DEPLOY_SL}"
+      echo "Deploy XP          : ${CTRL_DEPLOY_XP}"
+      echo "========================================"
+
+      if [ "${CTRL_DEPLOY_SL}" != "true" ] &&
+         [ "${CTRL_DEPLOY_XP}" != "true" ]; then
+        echo "ERROR: Select at least one module: SL or XP."
+        exit 1
+      fi
+
+      if [ -z "${CTRL_TARGET_BRANCH}" ]; then
+        echo "ERROR: Target branch cannot be empty."
+        exit 1
+      fi
+
+      echo "Validation successful."
+
+trigger_sl:
+  stage: trigger
+  needs:
+    - validate_parameters
+
+  rules:
+    - if: '$CTRL_DEPLOY_SL == "true"'
+      when: on_success
+    - when: never
+
+  trigger:
+    project: "rlms/source/nxt/staff-loan/rlms-sl-parent"
+    branch: "devopsTest"
+    strategy: mirror
+
+  variables:
+    Target_Branch: "$CTRL_TARGET_BRANCH"
+    DEPLOY_ENV: "$CTRL_DEPLOY_ENV"
+
+trigger_xp:
+  stage: trigger
+  needs:
+    - validate_parameters
+
+  rules:
+    - if: '$CTRL_DEPLOY_XP == "true"'
+      when: on_success
+    - when: never
+
+  trigger:
+    project: "rlms/source/nxt/xpress/rlms-xp-parent"
+    branch: "devopsTest"
+    strategy: mirror
+
+  variables:
+    Target_Branch: "$CTRL_TARGET_BRANCH"
+    DEPLOY_ENV: "$CTRL_DEPLOY_ENV"
