@@ -1,0 +1,18 @@
+Here is a polite version:
+
+*Subject:* Update on Universal Deployment Controller
+
+> Dear Sir,
+>
+> I would like to share that I have implemented the Universal GitLab Deployment Controller, which allows us to trigger all application modules from a single pipeline. It is working well for all modules.
+>
+> Previously, we had to handle each module separately, which was quite time-consuming. With this new approach, we can now manage all modules from a single window, which makes manual deployment much easier.
+>
+> At present, the pipeline supports application branch and non-production environment selection with manual deployment for safety. We can plan for auto-deployment and further customizations once this is stable.
+>
+> I am continuing to test and validate the modules and will keep you updated.
+>
+> Thank you for your support.
+>
+> Best Regards,
+> Arroju Chakradhari
