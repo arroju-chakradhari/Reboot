@@ -1,0 +1,245 @@
+spec:
+  inputs:
+    target_branch:
+      type: string
+      default: "sit_oct"
+      description: "Application code branch to build"
+    deploy_env:
+      type: string
+      default: "sit"
+      options: ["dev", "dev1", "devnext", "sit", "sit1", "uat", "uat1", "uat2", "preprod", "STG2", "RTAB"]
+      description: "Target deployment environment"
+    auto_deploy:
+      type: string
+      default: "no"
+      options: ["no", "yes"]
+      description: "Automatic deployment is permitted for SIT only"
+    fortify_scan:
+      type: string
+      default: "no"
+      options: ["no", "yes"]
+      description: "Run Fortify scanning"
+    deploy_home_loan:
+      type: boolean
+      default: false
+      description: "Home Loans"
+    deploy_home_related:
+      type: boolean
+      default: false
+      description: "Home Related Products"
+    deploy_admin:
+      type: boolean
+      default: false
+      description: "Admin"
+    deploy_auto_loan:
+      type: boolean
+      default: false
+      description: "Auto Loans"
+    deploy_commons:
+      type: boolean
+      default: false
+      description: "Commons"
+    deploy_external:
+      type: boolean
+      default: false
+      description: "External"
+    deploy_gp:
+      type: boolean
+      default: false
+      description: "GP"
+    deploy_rt:
+      type: boolean
+      default: false
+      description: "Roof Top Solar"
+    deploy_sl:
+      type: boolean
+      default: true
+      description: "Staff Loan (SL)"
+    deploy_xp:
+      type: boolean
+      default: false
+      description: "Xpress (XP)"
+---
+workflow:
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "web"'
+    - when: never
+
+variables:
+  CTRL_TARGET_BRANCH: "$[[ inputs.target_branch ]]"
+  CTRL_DEPLOY_ENV: "$[[ inputs.deploy_env ]]"
+  CTRL_AUTO_DEPLOY: "$[[ inputs.auto_deploy ]]"
+  CTRL_FORTIFY_SCAN: "$[[ inputs.fortify_scan ]]"
+  CTRL_HOME_LOAN: "$[[ inputs.deploy_home_loan ]]"
+  CTRL_HOME_RELATED: "$[[ inputs.deploy_home_related ]]"
+  CTRL_ADMIN: "$[[ inputs.deploy_admin ]]"
+  CTRL_AUTO_LOAN: "$[[ inputs.deploy_auto_loan ]]"
+  CTRL_COMMONS: "$[[ inputs.deploy_commons ]]"
+  CTRL_EXTERNAL: "$[[ inputs.deploy_external ]]"
+  CTRL_GP: "$[[ inputs.deploy_gp ]]"
+  CTRL_RT: "$[[ inputs.deploy_rt ]]"
+  CTRL_SL: "$[[ inputs.deploy_sl ]]"
+  CTRL_XP: "$[[ inputs.deploy_xp ]]"
+
+stages:
+  - trigger
+
+trigger_home_loan:
+  stage: trigger
+  rules:
+    - if: '$CTRL_HOME_LOAN == "true"'
+      when: on_success
+    - when: never
+  trigger:
+    project: "rlms/source/nxt/home-loans/home-loan-parent"
+    branch: "devopsTest"
+    strategy: mirror
+  variables: &downstream_variables
+    Target_Branch: "$CTRL_TARGET_BRANCH"
+    DEPLOY_ENV: "$CTRL_DEPLOY_ENV"
+    AUTO_DEPLOY: "$CTRL_AUTO_DEPLOY"
+    FORTIFY_SCAN: "$CTRL_FORTIFY_SCAN"
+
+trigger_home_related:
+  stage: trigger
+  rules:
+    - if: '$CTRL_HOME_RELATED == "true"'
+      when: on_success
+    - when: never
+  trigger:
+    project: "rlms/source/nxt/home-loans/home-related-products-parent"
+    branch: "devopsTest"
+    strategy: mirror
+  variables:
+    Target_Branch: "$CTRL_TARGET_BRANCH"
+    DEPLOY_ENV: "$CTRL_DEPLOY_ENV"
+    AUTO_DEPLOY: "$CTRL_AUTO_DEPLOY"
+    FORTIFY_SCAN: "$CTRL_FORTIFY_SCAN"
+
+trigger_admin:
+  stage: trigger
+  rules:
+    - if: '$CTRL_ADMIN == "true"'
+      when: on_success
+    - when: never
+  trigger:
+    project: "rlms/source/nxt/admin/rlms-admin-parent"
+    branch: "devopsTest"
+    strategy: mirror
+  variables:
+    Target_Branch: "$CTRL_TARGET_BRANCH"
+    DEPLOY_ENV: "$CTRL_DEPLOY_ENV"
+    AUTO_DEPLOY: "$CTRL_AUTO_DEPLOY"
+    FORTIFY_SCAN: "$CTRL_FORTIFY_SCAN"
+
+trigger_auto_loan:
+  stage: trigger
+  rules:
+    - if: '$CTRL_AUTO_LOAN == "true"'
+      when: on_success
+    - when: never
+  trigger:
+    project: "rlms/source/nxt/auto-loans/rlms-al-parent"
+    branch: "devopsTest"
+    strategy: mirror
+  variables:
+    Target_Branch: "$CTRL_TARGET_BRANCH"
+    DEPLOY_ENV: "$CTRL_DEPLOY_ENV"
+    AUTO_DEPLOY: "$CTRL_AUTO_DEPLOY"
+    FORTIFY_SCAN: "$CTRL_FORTIFY_SCAN"
+
+trigger_commons:
+  stage: trigger
+  rules:
+    - if: '$CTRL_COMMONS == "true"'
+      when: on_success
+    - when: never
+  trigger:
+    project: "rlms/source/nxt/commons/rlms-commons-parent"
+    branch: "devopsTest"
+    strategy: mirror
+  variables:
+    Target_Branch: "$CTRL_TARGET_BRANCH"
+    DEPLOY_ENV: "$CTRL_DEPLOY_ENV"
+    AUTO_DEPLOY: "$CTRL_AUTO_DEPLOY"
+    FORTIFY_SCAN: "$CTRL_FORTIFY_SCAN"
+
+trigger_external:
+  stage: trigger
+  rules:
+    - if: '$CTRL_EXTERNAL == "true"'
+      when: on_success
+    - when: never
+  trigger:
+    project: "rlms/source/nxt/external/rlms-external-parent"
+    branch: "devopsTest"
+    strategy: mirror
+  variables:
+    Target_Branch: "$CTRL_TARGET_BRANCH"
+    DEPLOY_ENV: "$CTRL_DEPLOY_ENV"
+    AUTO_DEPLOY: "$CTRL_AUTO_DEPLOY"
+    FORTIFY_SCAN: "$CTRL_FORTIFY_SCAN"
+
+trigger_gp:
+  stage: trigger
+  rules:
+    - if: '$CTRL_GP == "true"'
+      when: on_success
+    - when: never
+  trigger:
+    project: "rlms/source/nxt/gp/rlms-gp-parent"
+    branch: "devopsTest"
+    strategy: mirror
+  variables:
+    Target_Branch: "$CTRL_TARGET_BRANCH"
+    DEPLOY_ENV: "$CTRL_DEPLOY_ENV"
+    AUTO_DEPLOY: "$CTRL_AUTO_DEPLOY"
+    FORTIFY_SCAN: "$CTRL_FORTIFY_SCAN"
+
+trigger_rt:
+  stage: trigger
+  rules:
+    - if: '$CTRL_RT == "true"'
+      when: on_success
+    - when: never
+  trigger:
+    project: "rlms/source/nxt/roof_top_solar_panel/rlms-rt-parent"
+    branch: "devopsTest"
+    strategy: mirror
+  variables:
+    Target_Branch: "$CTRL_TARGET_BRANCH"
+    DEPLOY_ENV: "$CTRL_DEPLOY_ENV"
+    AUTO_DEPLOY: "$CTRL_AUTO_DEPLOY"
+    FORTIFY_SCAN: "$CTRL_FORTIFY_SCAN"
+
+trigger_sl:
+  stage: trigger
+  rules:
+    - if: '$CTRL_SL == "true"'
+      when: on_success
+    - when: never
+  trigger:
+    project: "rlms/source/nxt/staff-loan/rlms-sl-parent"
+    branch: "devopsTest"
+    strategy: mirror
+  variables:
+    Target_Branch: "$CTRL_TARGET_BRANCH"
+    DEPLOY_ENV: "$CTRL_DEPLOY_ENV"
+    AUTO_DEPLOY: "$CTRL_AUTO_DEPLOY"
+    FORTIFY_SCAN: "$CTRL_FORTIFY_SCAN"
+
+trigger_xp:
+  stage: trigger
+  rules:
+    - if: '$CTRL_XP == "true"'
+      when: on_success
+    - when: never
+  trigger:
+    project: "rlms/source/nxt/xpress/rlms-xp-parent"
+    branch: "devopsTest"
+    strategy: mirror
+  variables:
+    Target_Branch: "$CTRL_TARGET_BRANCH"
+    DEPLOY_ENV: "$CTRL_DEPLOY_ENV"
+    AUTO_DEPLOY: "$CTRL_AUTO_DEPLOY"
+    FORTIFY_SCAN: "$CTRL_FORTIFY_SCAN"
